@@ -1416,6 +1416,36 @@
         END IF
 #   endif
 #  endif
+#  ifdef TS_VAR
+!
+!  Define resolved salinity mixing.
+!
+!        IF (Aout(idSdif,ng)) THEN
+          Vinfo( 1)=Vname(1,idRdif)
+          WRITE (Vinfo( 2),'(a,1x,a)') Prefix, TRIM(Vname(2,idRdif))
+          Vinfo( 3)=Vname(3,idRdif)
+          Vinfo(14)=Vname(4,idRdif)
+          Vinfo(16)=Vname(1,idtime)
+          Vinfo(22)='coordinates'
+          Aval(5)=REAL(Iinfo(1,idRdif,ng),r8)
+          status=def_var(ng, model, AVG(ng)%ncid, AVG(ng)%Vid(idRdif),  &
+     &                   NF_FOUT, nvd4, w3dgrd, Aval, Vinfo, ncname,    &
+     &                   SetFillVal = .FALSE.)
+          IF (FoundError(exit_flag, NoError, __LINE__, MyFile)) RETURN
+
+          Vinfo( 1)=Vname(1,idRtdif)
+          WRITE (Vinfo( 2),'(a,1x,a)') Prefix, TRIM(Vname(2,idRtdif))
+          Vinfo( 3)=Vname(3,idRtdif)
+          Vinfo(14)=Vname(4,idRtdif)
+          Vinfo(16)=Vname(1,idtime)
+          Vinfo(22)='coordinates'
+          Aval(5)=REAL(Iinfo(1,idRtdif,ng),r8)
+          status=def_var(ng, model, AVG(ng)%ncid, AVG(ng)%Vid(idRtdif),  &
+     &                   NF_FOUT, nvd4, w3dgrd, Aval, Vinfo, ncname,    &
+     &                   SetFillVal = .FALSE.)
+          IF (FoundError(exit_flag, NoError, __LINE__, MyFile)) RETURN
+!        END IF
+#  endif
 #  if defined BULK_FLUXES || defined ECOSIM || defined ATM_PRESS
 !
 !  Define surface air pressure.
@@ -2034,6 +2064,14 @@
             AVG(ng)%Vid(idSdif)=var_id(i)
 #   endif
 #  endif
+#  ifdef TS_VAR
+          ELSE IF (TRIM(var_name(i)).eq.TRIM(Vname(1,idRdif))) THEN
+            got_var(idRdif)=.TRUE.
+            AVG(ng)%Vid(idRdif)=var_id(i)
+          ELSE IF (TRIM(var_name(i)).eq.TRIM(Vname(1,idRtdif))) THEN
+            got_var(idRtdif)=.TRUE.
+            AVG(ng)%Vid(idRtdif)=var_id(i)
+#  endif
 #  if defined BULK_FLUXES || defined ECOSIM || defined ATM_PRESS
           ELSE IF (TRIM(var_name(i)).eq.TRIM(Vname(1,idPair))) THEN
             got_var(idPair)=.TRUE.
@@ -2433,6 +2471,20 @@
           RETURN
         END IF
 #   endif
+#  endif
+#  ifdef TS_VAR
+        IF (.not.got_var(idRdif).and.Aout(idRdif,ng)) THEN
+          IF (Master) WRITE (stdout,60) TRIM(Vname(1,idRdif)),          &
+     &                                  TRIM(ncname)
+          exit_flag=3
+          RETURN
+        END IF
+        IF (.not.got_var(idRtdif).and.Aout(idRtdif,ng)) THEN
+          IF (Master) WRITE (stdout,60) TRIM(Vname(1,idRtdif)),          &
+     &                                  TRIM(ncname)
+          exit_flag=3
+          RETURN
+        END IF
 #  endif
 #  if defined BULK_FLUXES || defined ECOSIM || defined ATM_PRESS
         IF (.not.got_var(idPair).and.Aout(idPair,ng)) THEN
@@ -4170,6 +4222,44 @@
         END IF
 #    endif
 #   endif
+#  ifdef TS_VAR
+!
+!  Define resolved salinity mixing.
+!
+!        IF (Aout(idSdif,ng)) THEN
+          Vinfo( 1)=Vname(1,idRdif)
+          WRITE (Vinfo( 2),'(a,1x,a)') Prefix, TRIM(Vname(2,idRdif))
+          Vinfo( 3)=Vname(3,idRdif)
+          Vinfo(14)=Vname(4,idRdif)
+          Vinfo(16)=Vname(1,idtime)
+          Vinfo(22)='coordinates'
+          Aval(5)=REAL(Iinfo(1,idRdif,ng),r8)
+          AVG(ng)%pioVar(idRdif)%dkind=PIO_FOUT
+          AVG(ng)%pioVar(idRdif)%gtype=w3dvar
+!
+          status=def_var(ng, model, AVG(ng)%pioFile,                    &
+     &                   AVG(ng)%pioVar(idRdif)%vd,                     &
+     &                   PIO_FOUT, nvd4, w3dgrd, Aval, Vinfo, ncname,   &
+     &                   SetFillVal = .FALSE.)
+          IF (FoundError(exit_flag, NoError, __LINE__, MyFile)) RETURN
+
+          Vinfo( 1)=Vname(1,idRtdif)
+          WRITE (Vinfo( 2),'(a,1x,a)') Prefix, TRIM(Vname(2,idRtdif))
+          Vinfo( 3)=Vname(3,idRtdif)
+          Vinfo(14)=Vname(4,idRtdif)
+          Vinfo(16)=Vname(1,idtime)
+          Vinfo(22)='coordinates'
+          Aval(5)=REAL(Iinfo(1,idRtdif,ng),r8)
+          AVG(ng)%pioVar(idRtdif)%dkind=PIO_FOUT
+          AVG(ng)%pioVar(idRtdif)%gtype=w3dvar
+!
+          status=def_var(ng, model, AVG(ng)%pioFile,                    &
+     &                   AVG(ng)%pioVar(idRtdif)%vd,                     &
+     &                   PIO_FOUT, nvd4, w3dgrd, Aval, Vinfo, ncname,   &
+     &                   SetFillVal = .FALSE.)
+          IF (FoundError(exit_flag, NoError, __LINE__, MyFile)) RETURN
+!        END IF
+#  endif
 #   if defined BULK_FLUXES || defined ECOSIM || defined ATM_PRESS
 !
 !  Define surface air pressure.
@@ -4936,6 +5026,18 @@
             AVG(ng)%pioVar(idSdif)%dkind=PIO_FOUT
             AVG(ng)%pioVar(idSdif)%gtype=w3dvar
 #   endif
+#  ifdef TS_VAR
+          ELSE IF (TRIM(var_name(i)).eq.TRIM(Vname(1,idRdif))) THEN
+            got_var(idRdif)=.TRUE.
+            AVG(ng)%pioVar(idRdif)%vd=var_desc(i)
+            AVG(ng)%pioVar(idRdif)%dkind=PIO_FOUT
+            AVG(ng)%pioVar(idRdif)%gtype=w3dvar
+          ELSE IF (TRIM(var_name(i)).eq.TRIM(Vname(1,idRtdif))) THEN
+            got_var(idRtdif)=.TRUE.
+            AVG(ng)%pioVar(idRtdif)%vd=var_desc(i)
+            AVG(ng)%pioVar(idRtdif)%dkind=PIO_FOUT
+            AVG(ng)%pioVar(idRtdif)%gtype=w3dvar
+#  endif
 #   if defined BULK_FLUXES || defined ECOSIM || defined ATM_PRESS
           ELSE IF (TRIM(var_name(i)).eq.TRIM(Vname(1,idPair))) THEN
             got_var(idPair)=.TRUE.
@@ -5408,6 +5510,20 @@
         END IF
 #    endif
 #   endif
+#  ifdef TS_VAR
+        IF (.not.got_var(idRdif).and.Aout(idRdif,ng)) THEN
+          IF (Master) WRITE (stdout,60) TRIM(Vname(1,idRdif)),          &
+     &                                  TRIM(ncname)
+          exit_flag=3
+          RETURN
+        END IF
+        IF (.not.got_var(idRtdif).and.Aout(idRtdif,ng)) THEN
+          IF (Master) WRITE (stdout,60) TRIM(Vname(1,idRtdif)),          &
+     &                                  TRIM(ncname)
+          exit_flag=3
+          RETURN
+        END IF
+#  endif
 #   if defined BULK_FLUXES || defined ECOSIM || defined ATM_PRESS
         IF (.not.got_var(idPair).and.Aout(idPair,ng)) THEN
           IF (Master) WRITE (stdout,60) TRIM(Vname(1,idPair)),          &
