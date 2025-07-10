@@ -1271,7 +1271,8 @@
 !      IF (Aout(idSdif,ng)) THEN
         scale=1.0_dp
         gtype=gfactor*w3dvar
-        status=nf_fwrite3d(ng, iNLM, AVG(ng)%ncid, AVG(ng)%Vid(idRdif), &
+        status=nf_fwrite3d(ng, model, AVG(ng)%ncid, idRdif,             &
+     &                     AVG(ng)%Vid(idRdif),                         &
      &                     AVG(ng)%Rindex, gtype,                       &
      &                     LBi, UBi, LBj, UBj, 0, N(ng), scale,         &
 #   ifdef MASKING
@@ -1289,7 +1290,8 @@
         END IF
 
         gtype=gfactor*w3dvar
-        status=nf_fwrite3d(ng, iNLM, AVG(ng)%ncid, AVG(ng)%Vid(idRtdif),&
+        status=nf_fwrite3d(ng, model, AVG(ng)%ncid, idRtdif,            &
+     &                     AVG(ng)%Vid(idRtdif),                        &
      &                     AVG(ng)%Rindex, gtype,                       &
      &                     LBi, UBi, LBj, UBj, 0, N(ng), scale,         &
 #   ifdef MASKING

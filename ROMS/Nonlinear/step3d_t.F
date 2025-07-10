@@ -308,7 +308,7 @@
       real(r8) :: eps = 1.0E-16_r8
       real(r8) :: eps1 = 1.0E-12_r8
 
-      real(r8) :: cff, cff1, cff2, cff3
+      real(r8) :: cff, cff1, cff2, cff3, cffs, cfft
       real(r8) :: betaL, betaR, betaD, betaU
       real(r8) :: rL, rR, rD, rU, rkaL, rkaR, rkaD, rkaU
       real(r8) :: a1, b1, sw, sw_eta, sw_xi
@@ -1964,8 +1964,7 @@
      &                           dt(ng)
             ! Repeat for temperature
             t(i,j,k,nnew,itrc+5)=(t(i,j,k,nnew,itrc+4)-                 &
-     &                           t(i,j,k,nnew,itrc+3)*t(i,j,k,nnew,itrc+3))/&
-     &                           dt(ng)
+     &      t(i,j,k,nnew,itrc+3)*t(i,j,k,nnew,itrc+3))/dt(ng)
           END DO
           DO k=1,N(ng)-1
             ! Compute vertical salinity gradient 

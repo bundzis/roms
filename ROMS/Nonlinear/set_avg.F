@@ -3435,7 +3435,7 @@
         END IF
 #   endif
 #  endif
-#   ifdef TS_VAR
+#  ifdef TS_VAR
 !        IF (Aout(idSdif,ng)) THEN
           DO k=0,N(ng)
             DO j=JstrR,JendR
@@ -3466,9 +3466,9 @@
      &                          EWperiodic(ng), NSperiodic(ng),         &
      &                          AVERAGE(ng)%avgAKrt)
 #    endif
-            END IF
-#   endif
+          END IF
 #  endif
+!#  endif BCU
 
 #  ifdef LMD_SKPP
         IF (Aout(idHsbl,ng)) THEN

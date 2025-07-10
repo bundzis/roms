@@ -179,6 +179,7 @@
 #  ifdef TS_VAR
           real(r8), pointer :: avgAKr(:,:,:)
           real(r8), pointer :: avgAKrt(:,:,:)
+#  endif
 #  ifdef LMD_SKPP
           real(r8), pointer :: avghsbl(:,:)
 #  endif

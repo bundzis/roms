@@ -191,12 +191,16 @@ ifdef USE_NETCDF4
              LIBS += $(shell $(NC_CONFIG) --libs)
   endif
         NF_CONFIG ?= nf-config
-    NETCDF_INCDIR ?= $(shell $(NF_CONFIG) --prefix)/include
-             LIBS += $(shell $(NF_CONFIG) --flibs)
+    NETCDF_INCDIR ?= $(NETCDF_DIR)/include  # BCU
+             LIBS += -L$(NETCDF_DIR)/lib -lnetcdf -lnetcdff  # BCU
+#    NETCDF_INCDIR ?= $(shell $(NF_CONFIG) --prefix)/include
+#             LIBS += $(shell $(NF_CONFIG) --flibs)
            INCDIR += $(NETCDF_INCDIR) $(INCDIR)
 else
-    NETCDF_INCDIR ?= /opt/gfortransoft/serial/netcdf3/include
-    NETCDF_LIBDIR ?= /opt/gfortransoft/serial/netcdf3/lib
+    NETCDF_INCDIR ?= /opt/cray/pe/netcdf/4.9.0.9/gnu/12.3/include  # BCU
+    NETCDF_LIBDIR ?= /opt/cray/pe/netcdf/4.9.0.9/gnu/12.3/lib  # BCU
+#    NETCDF_INCDIR ?= /opt/gfortransoft/serial/netcdf3/include
+#    NETCDF_LIBDIR ?= /opt/gfortransoft/serial/netcdf3/lib
       NETCDF_LIBS ?= -lnetcdf
              LIBS += -L$(NETCDF_LIBDIR) $(NETCDF_LIBS)
            INCDIR += $(NETCDF_INCDIR) $(INCDIR)
@@ -237,8 +241,8 @@ ifdef USE_OpenMP
 endif
 
 ifdef USE_MCT
-       MCT_INCDIR ?= /usr/local/mct/include
-       MCT_LIBDIR ?= /usr/local/mct/lib
+       MCT_INCDIR ?= $SCRATCH/MCT/Install/include  # BCU /usr/local/mct/include
+       MCT_LIBDIR ?= $SCRATCH/MCT/Install/lib  # BCU/usr/local/mct/lib
            FFLAGS += -I$(MCT_INCDIR)
              LIBS += -L$(MCT_LIBDIR) -lmct -lmpeu
            INCDIR += $(MCT_INCDIR) $(INCDIR)
