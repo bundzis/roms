@@ -191,6 +191,20 @@ ad_Vadvection == C4       \                     ! temperature
    LBC(isTvar) ==   Per     Clo     Per     Clo \       ! temperature
                     Per     Clo     Per     Clo         ! salinity
 
+! Ice boundary conditions
+
+   LBC(isAice) ==   Per     Clo     Per     Clo         ! ice concentration
+   LBC(isHice) ==   Per     Clo     Per     Clo         ! ice thickness
+   LBC(isHmel) ==   Per     Clo     Per     Clo         ! meltpond thickness 
+   LBC(isHsno) ==   Per     Clo     Per     Clo         ! snow thickness
+   LBC(isTice) ==   Per     Clo     Per     Clo         ! ice temperature
+   LBC(isIage) ==   Per     Clo     Per     Clo         ! ice age 
+   LBC(isISxx) ==   Per     Clo     Per     Clo         ! sigma-11
+   LBC(isISxy) ==   Per     Clo     Per     Clo         ! sigma-12
+   LBC(isISyy) ==   Per     Clo     Per     Clo         ! sigma-22
+   LBC(isUice) ==   Per     Clo     Per     Clo         ! ice U-momentum
+   LBC(isVice) ==   Per     Clo     Per     Clo         ! ice V-momentum
+
 ! Waves Effect on Currents lateral boundary conditions.
 
    LBC(isU2Sd) ==   Per     Clo     Per     Clo         ! 2D U-stokes
