@@ -1235,6 +1235,7 @@ PIO_I2C_Preq = 65                 ! Maximum pending I2C requests
      FPOSNAM =  floats.in
      BPARNAM =  bio_Fennel.in
      SPARNAM =  sediment.in
+     IPARNAM =  ice.in
      USRNAME =  MyFile.dat
 
 !
