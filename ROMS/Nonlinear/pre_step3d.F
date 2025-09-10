@@ -360,10 +360,14 @@
             t(i,j,k,nrhs,itrc)=t(i,j,k,nstp,2) 
             t(i,j,k,nstp,itrc+1)=t(i,j,k,nstp,2)*t(i,j,k,nstp,2) 
             t(i,j,k,nrhs,itrc+1)=t(i,j,k,nstp,2)*t(i,j,k,nstp,2) 
-            t(i,j,k,nstp,itrc+3)=t(i,j,k,nstp,1)  ! set it to use temp
+            t(i,j,k,nstp,itrc+3)=t(i,j,k,nstp,1) ! set it to use temp
             t(i,j,k,nrhs,itrc+3)=t(i,j,k,nstp,1) 
-            t(i,j,k,nstp,itrc+4)=t(i,j,k,nstp,1)*t(i,j,k,nstp,1) 
-            t(i,j,k,nrhs,itrc+4)=t(i,j,k,nstp,1)*t(i,j,k,nstp,1) 
+            t(i,j,k,nstp,itrc+4)=t(i,j,k,nstp,1)*t(i,j,k,nstp,1) ! OG
+            t(i,j,k,nrhs,itrc+4)=t(i,j,k,nstp,1)*t(i,j,k,nstp,1) ! OG
+            ! t(i,j,k,nstp,itrc+3)=t(i,j,k,nstp,1) + 273.15_r8 ! set it to use temp, convert to Kelvin
+            ! t(i,j,k,nrhs,itrc+3)=t(i,j,k,nstp,1) + 273.15_r8 ! Convert to Kelvin 
+            ! t(i,j,k,nstp,itrc+4) = (t(i,j,k,nstp,1) + 273.15_r8)**2  ! Square in Kelvin
+            ! t(i,j,k,nrhs,itrc+4) = (t(i,j,k,nstp,1) + 273.15_r8)**2 ! Square in Kelvin
           END DO
         END DO
       END DO

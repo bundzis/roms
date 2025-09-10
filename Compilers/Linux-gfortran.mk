@@ -173,13 +173,15 @@ endif
 
 
 ifdef USE_PIO
-       PIO_INCDIR ?= /opt/gfortransoft/openmpi/pio/include
-       PIO_LIBDIR ?= /opt/gfortransoft/openmpi/pio/lib
-           FFLAGS += -I$(PIO_INCDIR)
-             LIBS += -L$(PIO_LIBDIR) -lpiof -lpioc
+        #PIO_INCDIR ?= /opt/gfortransoft/openmpi/pio/include # OG
+        #PIO_LIBDIR ?= /opt/gfortransoft/openmpi/pio/lib # OG
+       PIO_INCDIR ?= $SCRATCH/ParallelIO/build/include # /opt/cray/pe/hdf5-parallel/1.14.3.1/cray/18.0/include # BCU
+       PIO_LIBDIR ?= $SCRATCH/ParallelIO/build/lib # /opt/cray/pe/hdf5-parallel/1.14.3.1/cray/18.0/lib #BCU
+           FFLAGS += -I$(PIO_INCDIR) # OG
+             LIBS += -L$(PIO_LIBDIR) -lpiof -lpioc # OG
 
-   PNETCDF_INCDIR ?= /opt/gfortransoft/openmpi/pnetcdf/include
-   PNETCDF_LIBDIR ?= /opt/gfortransoft/openmpi/pnetcdf/lib
+   #PNETCDF_INCDIR ?= /opt/gfortransoft/openmpi/pnetcdf/include # OG
+   #PNETCDF_LIBDIR ?= /opt/gfortransoft/openmpi/pnetcdf/lib # OG
            FFLAGS += -I$(PNETCDF_INCDIR)
              LIBS += -L$(PNETCDF_LIBDIR) -lpnetcdf
 endif
