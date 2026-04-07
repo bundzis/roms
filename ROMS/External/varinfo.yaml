@@ -1330,6 +1330,28 @@ metadata:
     add_offset:     0.0d0
     scale:          1.0d0
 
+  - variable:       AKr                                              # Input/Output
+    standard_name:  resolved_vertical_salinity_mixing
+    long_name:      resolved vertical salinity mixing
+    units:          tracer2 second-1                                  # [tracer2/s]
+    field:          AKr
+    time:           ocean_time
+    index_code:     idRdif
+    type:           w3dvar
+    add_offset:     0.0d0
+    scale:          1.0d0
+
+  - variable:       AKrt                                              # Input/Output
+    standard_name:  resolved_vertical_temperature_mixing
+    long_name:      resolved vertical temperature mixing
+    units:          tracer2 second-1                                  # [tracer2/s]
+    field:          AKrt
+    time:           ocean_time
+    index_code:     idRtdif
+    type:           w3dvar
+    add_offset:     0.0d0
+    scale:          1.0d0
+
   - variable:       AKk                                              # Input/Output
     standard_name:  vertical_diffusion_coefficient_of_turbulent_kinetic_energy_of_sea_water
     long_name:      Turbulent kinetic energy vertical diffusion coefficient

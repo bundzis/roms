@@ -351,6 +351,27 @@
 !  Compute time rate of change of intermediate tracer due to
 !  horizontal advection.
 !
+#  ifdef TS_VAR
+      itrc=inert(1)
+      DO k=1,N(ng)
+        DO j=JstrR,JendR
+          DO i=IstrR,IendR
+            t(i,j,k,nstp,itrc)=t(i,j,k,nstp,2)  ! set it to use salt 
+            t(i,j,k,nrhs,itrc)=t(i,j,k,nstp,2) 
+            t(i,j,k,nstp,itrc+1)=t(i,j,k,nstp,2)*t(i,j,k,nstp,2) 
+            t(i,j,k,nrhs,itrc+1)=t(i,j,k,nstp,2)*t(i,j,k,nstp,2) 
+            t(i,j,k,nstp,itrc+3)=t(i,j,k,nstp,1) ! set it to use temp
+            t(i,j,k,nrhs,itrc+3)=t(i,j,k,nstp,1) 
+            t(i,j,k,nstp,itrc+4)=t(i,j,k,nstp,1)*t(i,j,k,nstp,1) ! OG
+            t(i,j,k,nrhs,itrc+4)=t(i,j,k,nstp,1)*t(i,j,k,nstp,1) ! OG
+            ! t(i,j,k,nstp,itrc+3)=t(i,j,k,nstp,1) + 273.15_r8 ! set it to use temp, convert to Kelvin
+            ! t(i,j,k,nrhs,itrc+3)=t(i,j,k,nstp,1) + 273.15_r8 ! Convert to Kelvin 
+            ! t(i,j,k,nstp,itrc+4) = (t(i,j,k,nstp,1) + 273.15_r8)**2  ! Square in Kelvin
+            ! t(i,j,k,nrhs,itrc+4) = (t(i,j,k,nstp,1) + 273.15_r8)**2 ! Square in Kelvin
+          END DO
+        END DO
+      END DO
+#  endif
       T_LOOP1 :DO itrc=1,NT(ng)
         K_LOOP: DO k=1,N(ng)
 !

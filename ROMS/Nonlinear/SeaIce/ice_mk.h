@@ -741,7 +741,7 @@
             ELSE
 #ifdef ICE_SHOREFAST
               hh=h(i,j)+Zt_avg1(i,j)
-              clear=hh-0.9_r8*Si(i,j,liol,isHice)
+              clear=hh-0.9_r8*Si(i,j,liold,isHice) ! BCU
               clear=MAX(clear, 0.0_r8)
               IF (clear.lt.1.5_r8) THEN
                 fac_sf=MAX(clear-0.5_r8, 0.0_r8)/1.0_r8

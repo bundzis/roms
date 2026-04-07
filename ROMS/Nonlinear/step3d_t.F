@@ -92,6 +92,10 @@
      &                    GRID(ng) % Hvom,                              &
      &                    GRID(ng) % z_r,                               &
      &                    MIXING(ng) % Akt,                             &
+# ifdef TS_VAR
+     &                    MIXING(ng) % Akr,                             &
+     &                    MIXING(ng) % Akrt,                            &
+# endif
      &                    OCEAN(ng) % W,                                &
 # ifdef OMEGA_IMPLICIT
      &                    OCEAN(ng) % Wi,                               &
@@ -132,6 +136,10 @@
      &                          Hz, Huon, Hvom,                         &
      &                          z_r,                                    &
      &                          Akt,                                    &
+# ifdef TS_VAR
+     &                          Akr,                                    &
+     &                          Akrt,                                   &
+# endif
      &                          W,                                      &
 # ifdef OMEGA_IMPLICIT
      &                          Wi,                                     &
@@ -205,6 +213,10 @@
 #  else
       real(r8), intent(in) :: Akt(LBi:,LBj:,0:,:)
 #  endif
+#  ifdef TS_VAR
+      real(r8), intent(inout) :: Akr(LBi:,LBj:,0:)
+      real(r8), intent(inout) :: Akrt(LBi:,LBj:,0:)
+#  endif
       real(r8), intent(in) :: W(LBi:,LBj:,0:)
 #  ifdef OMEGA_IMPLICIT
       real(r8), intent(in) :: Wi(LBi:,LBj:,0:)
@@ -251,6 +263,10 @@
       real(r8), intent(in) :: Hvom(LBi:UBi,LBj:UBj,N(ng))
       real(r8), intent(in) :: z_r(LBi:UBi,LBj:UBj,N(ng))
       real(r8), intent(in) :: Akt(LBi:UBi,LBj:UBj,0:N(ng),NAT)
+#  ifdef TS_VAR
+      real(r8), intent(inout) :: Akr(LBi:UBi,LBj:UBj,0:N(ng))
+      real(r8), intent(inout) :: Akrt(LBi:UBi,LBj:UBj,0:N(ng))
+#  endif
       real(r8), intent(in) :: W(LBi:UBi,LBj:UBj,0:N(ng))
 #  ifdef OMEGA_IMPLICIT
       real(r8), intent(in) :: Wi(LBi:UBi,LBj:UBj,0:N(ng))
@@ -292,7 +308,7 @@
       real(r8) :: eps = 1.0E-16_r8
       real(r8) :: eps1 = 1.0E-12_r8
 
-      real(r8) :: cff, cff1, cff2, cff3
+      real(r8) :: cff, cff1, cff2, cff3, cffs, cfft
       real(r8) :: betaL, betaR, betaD, betaU
       real(r8) :: rL, rR, rD, rU, rkaL, rkaR, rkaD, rkaU
       real(r8) :: a1, b1, sw, sw_eta, sw_xi
@@ -1658,7 +1674,11 @@
 !-----------------------------------------------------------------------
 !
       J_LOOP2 : DO j=Jstr,Jend                  ! start pipelined J-loop
+# ifdef TS_VAR
+        DO itrc=1,NAT
+# else
         DO itrc=1,NT(ng)
+# endif
           ltrc=MIN(NAT,itrc)
 
 # ifdef SPLINES_VDIFF
@@ -1913,6 +1933,60 @@
      &                            t(:,:,:,nnew,itrc))
         END IF
       END DO
+# ifdef TS_VAR
+!
+!  Compute numerical and physical destruction of tracer variance.
+!
+      itrc=inert(1)
+      DO j=JstrR,JendR
+        DO i=IstrR,IendR
+          DO k=1,N(ng)
+# if !defined SPLINES_VDIFF
+            ! Multiply by oHz to convert to Tunits.
+            t(i,j,k,nnew,itrc)=t(i,j,k,nnew,itrc)*oHz(i,j,k) 
+            t(i,j,k,nnew,itrc+1)=t(i,j,k,nnew,itrc+1)*oHz(i,j,k) 
+            ! Repeat for temperature
+            t(i,j,k,nnew,itrc+3)=t(i,j,k,nnew,itrc+3)*oHz(i,j,k) 
+            t(i,j,k,nnew,itrc+4)=t(i,j,k,nnew,itrc+4)*oHz(i,j,k)
+# else
+            ! Multiply by oHz to convert to Tunits. Only necessary for MPDATA. 
+            if ((Hadvection(itrc,ng)%MPDATA)) then
+              t(i,j,k,nnew,itrc)=t(i,j,k,nnew,itrc)*oHz(i,j,k) 
+              t(i,j,k,nnew,itrc+1)=t(i,j,k,nnew,itrc+1)*oHz(i,j,k) 
+              ! Repeat for temperature
+              t(i,j,k,nnew,itrc+3)=t(i,j,k,nnew,itrc+3)*oHz(i,j,k) 
+              t(i,j,k,nnew,itrc+4)=t(i,j,k,nnew,itrc+4)*oHz(i,j,k)
+            end if
+# endif
+            ! Compute numerical mixing: mnum = ( A{c^2} - (A{c})^2 ) / dt
+            t(i,j,k,nnew,itrc+2)=(t(i,j,k,nnew,itrc+1)-                 &
+     &                           t(i,j,k,nnew,itrc)*t(i,j,k,nnew,itrc))/&
+     &                           dt(ng)
+            ! Repeat for temperature
+            t(i,j,k,nnew,itrc+5)=(t(i,j,k,nnew,itrc+4)-                 &
+     &      t(i,j,k,nnew,itrc+3)*t(i,j,k,nnew,itrc+3))/dt(ng)
+          END DO
+          DO k=1,N(ng)-1
+            ! Compute vertical salinity gradient 
+            cffs=(t(i,j,k+1,nnew,isalt)-t(i,j,k,nnew,isalt))/            &
+     &                         (z_r(i,j,k+1)-z_r(i,j,k))
+            ! Compute destruction of vertical salinity variance, 
+            ! mphy = 2*kappa_v*(ds/dz)^2
+            ! Removed subtraction of background diffusivity (07/9/2025)
+            AKr(i,j,k)=2.0_r8*cffs*cffs*(Akt(i,j,k,itemp))
+
+            ! Compute vertical temperature gradient 
+            cfft=(t(i,j,k+1,nnew,itemp)-t(i,j,k,nnew,itemp))/            &
+     &                         (z_r(i,j,k+1)-z_r(i,j,k))
+            ! Compute destruction of vertical temperature variance, 
+            ! mphy = 2*kappa_v*(dT/dz)^2
+            AKrt(i,j,k)=2.0_r8*cfft*cfft*(Akt(i,j,k,itemp)) 
+
+          END DO
+        END DO
+      END DO
+# endif
+
 # ifdef DISTRIBUTE
 !
 !  Exchange boundary data.

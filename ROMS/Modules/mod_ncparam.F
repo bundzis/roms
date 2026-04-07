@@ -305,6 +305,8 @@
       integer  :: idSSTc        ! SST climatology
       integer  :: idShea        ! net sensible heat flux
       integer  :: idSWCW        ! SIN(omega(k)*t)*COS(omega(l)*t)
+      integer  :: idRdif        ! vertical resolved salinity mixing
+      integer  :: idRtdif       ! vertical resolved temperature mixing
       integer  :: idResi        ! 4D-Var residual vector
       integer  :: idsfwf        ! surface freswater flux
       integer  :: idscoR        ! ADM sensitivity scope RHO-mask
@@ -1694,6 +1696,12 @@
           CASE ('idSdif')
             idSdif=varid
             idDiff(isalt)=idSdif
+#endif
+#ifdef TS_VAR
+          CASE ('idRdif')
+            idRdif=varid
+          CASE ('idRtdif')
+            idRtdif=varid
 #endif
           CASE ('idVmLS')
             idVmLS=varid

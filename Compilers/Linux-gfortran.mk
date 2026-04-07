@@ -173,13 +173,15 @@ endif
 
 
 ifdef USE_PIO
-       PIO_INCDIR ?= /opt/gfortransoft/openmpi/pio/include
-       PIO_LIBDIR ?= /opt/gfortransoft/openmpi/pio/lib
-           FFLAGS += -I$(PIO_INCDIR)
-             LIBS += -L$(PIO_LIBDIR) -lpiof -lpioc
+        #PIO_INCDIR ?= /opt/gfortransoft/openmpi/pio/include # OG
+        #PIO_LIBDIR ?= /opt/gfortransoft/openmpi/pio/lib # OG
+       PIO_INCDIR ?= $SCRATCH/ParallelIO/build/include # /opt/cray/pe/hdf5-parallel/1.14.3.1/cray/18.0/include # BCU
+       PIO_LIBDIR ?= $SCRATCH/ParallelIO/build/lib # /opt/cray/pe/hdf5-parallel/1.14.3.1/cray/18.0/lib #BCU
+           FFLAGS += -I$(PIO_INCDIR) # OG
+             LIBS += -L$(PIO_LIBDIR) -lpiof -lpioc # OG
 
-   PNETCDF_INCDIR ?= /opt/gfortransoft/openmpi/pnetcdf/include
-   PNETCDF_LIBDIR ?= /opt/gfortransoft/openmpi/pnetcdf/lib
+   #PNETCDF_INCDIR ?= /opt/gfortransoft/openmpi/pnetcdf/include # OG
+   #PNETCDF_LIBDIR ?= /opt/gfortransoft/openmpi/pnetcdf/lib # OG
            FFLAGS += -I$(PNETCDF_INCDIR)
              LIBS += -L$(PNETCDF_LIBDIR) -lpnetcdf
 endif
@@ -191,12 +193,16 @@ ifdef USE_NETCDF4
              LIBS += $(shell $(NC_CONFIG) --libs)
   endif
         NF_CONFIG ?= nf-config
-    NETCDF_INCDIR ?= $(shell $(NF_CONFIG) --prefix)/include
-             LIBS += $(shell $(NF_CONFIG) --flibs)
+    NETCDF_INCDIR ?= $(NETCDF_DIR)/include  # BCU
+             LIBS += -L$(NETCDF_DIR)/lib -lnetcdf -lnetcdff  # BCU
+#    NETCDF_INCDIR ?= $(shell $(NF_CONFIG) --prefix)/include
+#             LIBS += $(shell $(NF_CONFIG) --flibs)
            INCDIR += $(NETCDF_INCDIR) $(INCDIR)
 else
-    NETCDF_INCDIR ?= /opt/gfortransoft/serial/netcdf3/include
-    NETCDF_LIBDIR ?= /opt/gfortransoft/serial/netcdf3/lib
+    NETCDF_INCDIR ?= /opt/cray/pe/netcdf/4.9.0.9/gnu/12.3/include  # BCU
+    NETCDF_LIBDIR ?= /opt/cray/pe/netcdf/4.9.0.9/gnu/12.3/lib  # BCU
+#    NETCDF_INCDIR ?= /opt/gfortransoft/serial/netcdf3/include
+#    NETCDF_LIBDIR ?= /opt/gfortransoft/serial/netcdf3/lib
       NETCDF_LIBS ?= -lnetcdf
              LIBS += -L$(NETCDF_LIBDIR) $(NETCDF_LIBS)
            INCDIR += $(NETCDF_INCDIR) $(INCDIR)
@@ -237,8 +243,8 @@ ifdef USE_OpenMP
 endif
 
 ifdef USE_MCT
-       MCT_INCDIR ?= /usr/local/mct/include
-       MCT_LIBDIR ?= /usr/local/mct/lib
+       MCT_INCDIR ?= $SCRATCH/MCT/Install/include  # BCU /usr/local/mct/include
+       MCT_LIBDIR ?= $SCRATCH/MCT/Install/lib  # BCU/usr/local/mct/lib
            FFLAGS += -I$(MCT_INCDIR)
              LIBS += -L$(MCT_LIBDIR) -lmct -lmpeu
            INCDIR += $(MCT_INCDIR) $(INCDIR)
