@@ -1099,11 +1099,19 @@
 !  cases there are inaccuracies in other terms as well (SMD).
 !
           cff=wet_bulb*2093.0_r8
+! Original
+!          Qsh_i=Qsh_i+                                                  &
+!     &          ABS(rain(i,j))*cff*                                     &
+!     &          (TiceK-TairC(i)+(Qsea(i)-Q(i))*Hlv(i,j)/blk_Cpa)
+!          Coef_Ice(i,j)=Coef_Ice(i,j) -                                 &
+!     &                  ABS(rain(i,j))*cff
+! BCU fix to subtract same units for air and ice temps.
           Qsh_i=Qsh_i+                                                  &
      &          ABS(rain(i,j))*cff*                                     &
-     &          (TiceK-TairC(i)+(Qsea(i)-Q(i))*Hlv(i,j)/blk_Cpa)
+     &          (TiceK-TairK(i)+(Qsea(i)-Q(i))*Hlv(i,j)/blk_Cpa)
           Coef_Ice(i,j)=Coef_Ice(i,j) -                                 &
      &                  ABS(rain(i,j))*cff
+
 !
 !  Use TairK here, unlike in above calculation of Hsr, since
 !  Fi(:,:,icIsst) will be calculated in Kelvin (SMD, 10.20.20).
