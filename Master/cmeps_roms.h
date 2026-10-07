@@ -3124,11 +3124,11 @@
       integer :: staggerEdgeUWidth(2)
 !
       integer, allocatable :: deBlockList(:,:,:)
-      integer (i4b), pointer :: ptrM(:,:) => NULL()     ! land/sea mask
+      integer (i4b), pointer :: ptrM(:,:)               ! land/sea mask
 !
-      real (dp), pointer :: ptrA(:,:) => NULL()         ! area
-      real (dp), pointer :: ptrX(:,:) => NULL()         ! longitude
-      real (dp), pointer :: ptrY(:,:) => NULL()         ! latitude
+      real (dp), pointer :: ptrA(:,:)                   ! area
+      real (dp), pointer :: ptrX(:,:)                   ! longitude
+      real (dp), pointer :: ptrY(:,:)                   ! latitude
 !
       character (len=*), parameter :: MyFile =                          &
      &  __FILE__//", ROMS_SetGridArrays"
@@ -3139,6 +3139,11 @@
 !-----------------------------------------------------------------------
 !  Initialize return code flag to success state (no error).
 !-----------------------------------------------------------------------
+!
+      ptrM => NULL()
+      ptrA => NULL()
+      ptrX => NULL()
+      ptrY => NULL()
 !
       IF (ESM_track) THEN
         WRITE (trac,'(a,a,i0)') '==> Entering ROMS_SetGridArrays',      &
@@ -3607,7 +3612,7 @@
       integer :: localDE, localDEcount, localPET
       integer :: ExportCount, ImportCount
 !
-      real (dp), dimension(:,:), pointer :: ptr2d => NULL()
+      real (dp), dimension(:,:), pointer :: ptr2d
 !
       character (len=10) :: AttList(1)
 
@@ -3625,6 +3630,8 @@
 !-----------------------------------------------------------------------
 !  Initialize return code flag to success state (no error).
 !-----------------------------------------------------------------------
+!
+      ptr2d => NULL()
 !
       IF (ESM_track) THEN
         WRITE (trac,'(a,a,i0)') '==> Entering ROMS_SetStates',          &
@@ -4398,7 +4405,7 @@
 # endif
       real (dp) :: AttValues(14)
 !
-      real (dp), pointer :: ptr2d(:,:) => NULL()
+      real (dp), pointer :: ptr2d(:,:)
 !
 # if defined WIND_MINUS_CURRENT && !defined BULK_FLUXES
       real (dp), allocatable  :: RhoAir(:,:),  Wstar(:,:)
@@ -4435,6 +4442,8 @@
 !-----------------------------------------------------------------------
 !  Initialize return code flag to success state (no error).
 !-----------------------------------------------------------------------
+!
+      ptr2d => NULL()
 !
       IF (ESM_track) THEN
         WRITE (trac,'(a,a,i0)') '==> Entering ROMS_Import',             &
@@ -5078,6 +5087,16 @@
      &                              NghostPoints,                       &
      &                              EWperiodic(ng), NSperiodic(ng),     &
      &                              FORCES(ng)%lrflx)
+!
+!  Make sure to retain the imported downward longwave radiation,
+!  including any exchanged halos, for use at each ocean time step until
+!  the next coupling exchange. This step is essential when using the
+!  bulk flux parameterization, especially if the coupling step is longer
+!  than the ROMS timestep. It helps prevent excessive cooling because
+!  the longwave radiation flux (lrflx) is modified in the bulk_flux.F
+!  routine.
+!
+                FORCES(ng)%lrflxG(:,:,1)=FORCES(ng)%lrflx(:,:)
               END IF
 #  endif
 # endif
@@ -6064,7 +6083,7 @@
 !
       real (dp) :: Fmin(1), Fmax(1), Fval, MyFmin(1), MyFmax(1)
 !
-      real (dp), pointer :: ptr2d(:,:) => NULL()
+      real (dp), pointer :: ptr2d(:,:)
 !
       real (dp), allocatable  :: Ubar(:,:), Vbar(:,:)
       real (dp), allocatable  :: Usur(:,:), Vsur(:,:)
@@ -6086,6 +6105,8 @@
 !-----------------------------------------------------------------------
 !  Initialize return code flag to success state (no error).
 !-----------------------------------------------------------------------
+!
+      ptr2d => NULL()
 !
       IF (ESM_track) THEN
         WRITE (trac,'(a,a,i0)') '==> Entering ROMS_Export',             &

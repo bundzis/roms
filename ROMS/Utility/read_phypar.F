@@ -973,6 +973,8 @@
               Npts=load_r(Nval, Rval, Ngrids, Dcrit)
             CASE ('WTYPE')
               Npts=load_i(Nval, Rval, Ngrids, lmd_Jwt)
+            CASE ('BOT_ALBEDO')
+              Npts=load_r(Nval, Rval, Ngrids, bot_albedo)
             CASE ('LEVSFRC')
               Npts=load_i(Nval, Rval, Ngrids, levsfrc)
             CASE ('LEVBFRC')
@@ -5563,6 +5565,10 @@
             RETURN
           END IF
 # endif
+# ifdef BOTTOM_ALBEDO
+          WRITE (out,200) bot_albedo(ng), 'bot_albedo',                 &
+     &          'Bottom albedo coefficient (nondimensional).'
+# endif
 # ifdef BODYFORCE
           WRITE (out,130) levsfrc(ng), 'levsfrc',                       &
      &          'Deepest level to apply surface stress as a',           &
@@ -7630,7 +7636,12 @@
             END IF
           END IF
 # endif
-# ifdef TANGENT
+# ifdef WEAK_CONSTRAINT
+          WRITE (out,230) '     Output Impulse Forcing File:  ',        &
+     &                    TRIM(TLF(ng)%name)
+# endif
+#endif
+#ifdef TANGENT
           IF (ndefTLM(ng).eq.0) THEN
             WRITE (out,230) '             Output Tangent File:  ',      &
      &                      TRIM(TLM(ng)%name)
@@ -7638,13 +7649,8 @@
             WRITE (out,230) '        Prefix for Tangent Files:  ',      &
      &                      TRIM(TLM(ng)%head)
           END IF
-# endif
-# ifdef WEAK_CONSTRAINT
-          WRITE (out,230) '     Output Impulse Forcing File:  ',        &
-     &                    TRIM(TLF(ng)%name)
-# endif
 #endif
-#ifdef ADJOINT
+#if defined ADJOINT && !defined CORRELATION
           IF (ndefADJ(ng).eq.0) THEN
             WRITE (out,230) '             Output Adjoint File:  ',      &
      &                      TRIM(ADM(ng)%name)

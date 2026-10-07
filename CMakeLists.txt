@@ -1,6 +1,6 @@
 # git $Id$
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::: David Robertson :::
-# Copyright (c) 2002-2026 The ROMS Group                                :::
+# Copyright (c) 2002-2025 The ROMS Group                                :::
 #   Licensed under a MIT/X style license                                :::
 #   See License_ROMS.md                                                 :::
 #::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -399,6 +399,7 @@ else()
     add_library( ROMS_static STATIC $<TARGET_OBJECTS:Objects> )
     set_target_properties(ROMS_static PROPERTIES OUTPUT_NAME ROMS)
     install( TARGETS ROMS_static ARCHIVE )
+    install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY} DESTINATION "${CMAKE_INSTALL_PREFIX}" )
 
     # This is needed to add to the depency list of the ROMS executable
     # since it is linking with libROMS.a instead of libROMS_static.a

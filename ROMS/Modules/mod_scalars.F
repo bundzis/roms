@@ -764,9 +764,17 @@
         real(r8) :: lambda = 1.0_r8
 #endif
 !
-!  Jerlov water type to assign everywhere, range values: 1 - 5.
+!  Jerlov water type to assign everywhere, range values: 1 - 9.
 !
         integer, allocatable :: lmd_Jwt(:)
+!
+!  Bottom albedo coefficient (nondimensional): fraction of downward
+!  solar radiation at the seabed that is reflected. The length scales
+!  of upward absorption follow Jerlov water type. The unreflected
+!  fraction is absorbed by the bed (effectively modifying bottom
+!  tracer flux).
+!
+        real(dp), allocatable :: bot_albedo(:) 
 !
 !  Grid r-factor (non-dimensional).
 !
@@ -1227,6 +1235,22 @@
         integer, allocatable :: Hcount(:)
 #endif
 !
+!  Maximum number of model state variables to process.
+!
+        integer :: MstateVar
+!
+!  State variable names. The associated with the state variable metadata
+!  indices, and are specified in "mod_necparam".
+!
+        character (len=40), allocatable :: StateVarName(:)
+
+# if defined MULTI_SCALE_B && defined NONUNIFORM_SCALES
+!
+!  State spatially varying correlation scale variable names.
+!
+        character (len=40), allocatable :: BscaleVarName(:)
+# endif
+!
 !-----------------------------------------------------------------------
 !  Adjoint sensitivity parameters.
 !-----------------------------------------------------------------------
@@ -1270,10 +1294,6 @@
 !------------------------------------------------------------------------
 !  Background/model error covariance parameters.
 !------------------------------------------------------------------------
-!
-!  Maximum number of model state variables to process.
-!
-        integer :: MstateVar
 !
 !  Logical switch to compute initial conditions, model and surface
 !  forcing error covariance normalization factors.
@@ -1334,10 +1354,19 @@
 !
         logical, allocatable :: balance(:)
 !
+!  Dirac delta function (i,j,k) locations.
+!
+        integer, allocatable :: Dirac(:,:,:)
+!
 !  Initial conditions, model and surface forcing error covariance
 !  horizontal decorrelation scales (m).
 !
+# ifdef MULTI_SCALE_B
+        real(r8), allocatable :: HdecayX(:,:,:,:)
+        real(r8), allocatable :: HdecayY(:,:,:,:)
+# else
         real(r8), allocatable :: Hdecay(:,:,:)
+# endif
 !
 !  Initial conditions, model and surface forcing error covariance
 !  temporal decorrelation scales (second).
@@ -1352,7 +1381,11 @@
 !  Boundary conditions error covariance horizontal decorrelation
 !  scales (m).
 !
+# ifdef MULTI_SCALE_B
+        real(r8), allocatable :: HdecayB(:,:,:,:)
+# else
         real(r8), allocatable :: HdecayB(:,:,:)
+# endif
 !
 !  Boundary conditions error covariance vertical decorrelation
 !  scales (m).
@@ -1390,6 +1423,24 @@
 !  of state variable indices, [MstateVar,Ngrids]
 !
         real(r8), allocatable :: S_bgqc(:,:)
+
+# ifdef MULTI_SCALE_B
+!
+!  Multiscale background covariance matrix parameters:
+!
+!    Nscale   number of correlation scales to be combined
+!    Nlap     nunber of K-Laplacian applications for each variable
+!    NiterCG  number of CG iterations to obtain each scale eigenvalue
+!    NiterCI  number of implicit Chebyshev solver iterations
+!    Bwgt     weights assigned to each correlation function
+!
+        integer, allocatable :: Nscale(:)
+        integer, allocatable :: Nlap(:,:,:)
+        integer, allocatable :: NiterCG(:,:)
+        integer, allocatable :: NiterCI(:,:)
+!
+        real(r8), allocatable :: Bwgt(:,:,:)
+# endif
 
 # ifdef STD_MODEL
 !
@@ -1527,7 +1578,7 @@
         real(r8), allocatable :: blk_ZT(:)        ! (m)
         real(r8), allocatable :: blk_ZW(:)        ! (m)
 #endif
-# if defined SG_BBL || defined SSW_BBL
+#if defined SG_BBL || defined SSW_BBL
 !
 !-----------------------------------------------------------------------
 !  Closure parameters associated with Styles and Glenn (1999) bottom
@@ -1570,7 +1621,7 @@
         real(dp) :: sg_znotdef                 ! (m)
 
         complex(c8) :: sg_mp
-# endif
+#endif
 #if defined LMD_SKPP || defined SOLAR_SOURCE
 !
 !-----------------------------------------------------------------------
@@ -2035,24 +2086,21 @@
 !  Allocate variables.
 !-----------------------------------------------------------------------
 !
-#if defined FOUR_DVAR || defined VERIFICATION
       MstateVar=6+MT
-# if defined GLS_MIXING || defined MY25_MIXING
+#if defined GLS_MIXING || defined MY25_MIXING
       MstateVar=MstateVar+1
-# endif
-# ifdef WEC
+#endif
+#ifdef WEC
       MstateVar=MstateVar+2
-#  if defined SOLVE3D
-      MstateVar=MstateVar+2
-#  endif
-# endif
-# ifdef ADJUST_WSTRESS
+# if defined SOLVE3D
       MstateVar=MstateVar+2
 # endif
-# ifdef ADJUST_STFLUX
+#endif
+#ifdef ADJUST_WSTRESS
+      MstateVar=MstateVar+2
+#endif
+#ifdef ADJUST_STFLUX
       MstateVar=MstateVar+MT
-# endif
-!
 #endif
 
 #ifdef T_PASSIVE
@@ -2555,6 +2603,11 @@
 
       IF (.not.allocated(lmd_Jwt)) THEN
         allocate ( lmd_Jwt(Ngrids) )
+        Dmem(1)=Dmem(1)+REAL(Ngrids,r8)
+      END IF
+
+      IF (.not.allocated(bot_albedo)) THEN
+        allocate ( bot_albedo(Ngrids) )
         Dmem(1)=Dmem(1)+REAL(Ngrids,r8)
       END IF
 
@@ -3165,6 +3218,10 @@
       END IF
 #endif
 
+      IF (.not.allocated(StateVarName)) THEN
+        allocate ( StateVarName(MstateVar) )
+      END IF
+
       IF (.not.allocated(KstrS)) THEN
         allocate ( KstrS(Ngrids) )
         Dmem(1)=Dmem(1)+REAL(Ngrids,r8)
@@ -3201,6 +3258,12 @@
       IF (.not.allocated(SO_sdev)) THEN
         allocate ( SO_sdev(5,Ngrids) )
         Dmem(1)=Dmem(1)+5.0_r8*REAL(Ngrids,r8)
+      END IF
+#endif
+
+#if defined MULTI_SCALE_B && defined NONUNIFORM_SCALES
+      IF (.not.allocated(BscaleVarName)) THEN
+        allocate ( BscaleVarName(MstateVar) )
       END IF
 #endif
 
@@ -3253,10 +3316,18 @@
         Dmem(1)=Dmem(1)+REAL(MstateVar,r8)
       END IF
 
+      IF (.not.allocated(Dirac)) THEN
+        allocate ( Dirac(3,MstateVar,Ngrids) )
+        Dmem(1)=Dmem(1)+3.0_r8*REAL(MstateVar*Ngrids,r8)
+      END IF
+
+# ifndef MULTI_SCALE_B
       IF (.not.allocated(Hdecay)) THEN
         allocate ( Hdecay(2,MstateVar,Ngrids) )
         Dmem(1)=Dmem(1)+2.0_r8*REAL(MstateVar*Ngrids,r8)
       END IF
+# endif
+
       IF (.not.allocated(Vdecay)) THEN
         allocate ( Vdecay(2,MstateVar,Ngrids) )
         Dmem(1)=Dmem(1)+2.0_r8*REAL(MstateVar*Ngrids,r8)
@@ -3267,10 +3338,13 @@
         Dmem(1)=Dmem(1)+REAL(MstateVar*Ngrids,r8)
       END IF
 
+# ifndef MULTI_SCALE_B
       IF (.not.allocated(HdecayB)) THEN
         allocate ( HdecayB(MstateVar,4,Ngrids) )
         Dmem(1)=Dmem(1)+4.0_r8*REAL(MstateVar*Ngrids,r8)
       END IF
+# endif
+
       IF (.not.allocated(VdecayB)) THEN
         allocate ( VdecayB(MstateVar,4,Ngrids) )
         Dmem(1)=Dmem(1)+4.0_r8*REAL(MstateVar*Ngrids,r8)
@@ -3288,6 +3362,13 @@
         allocate ( S_bgqc(MstateVar,Ngrids) )
         Dmem(1)=Dmem(1)+REAL(MstateVar*Ngrids,r8)
       END IF
+
+# ifdef MULTI_SCALE_B
+      IF (.not.allocated(Nscale)) THEN
+        allocate ( Nscale(Ngrids) )
+        Dmem(1)=Dmem(1)+REAL(Ngrids,r8)
+      END IF
+# endif
 
 # ifdef STD_MODEL
       IF (.not.allocated(Sigma_max)) THEN
@@ -3791,6 +3872,8 @@
 
       IF (allocated(lmd_Jwt))           deallocate ( lmd_Jwt )
 
+      IF (allocated(bot_albedo))        deallocate ( bot_albedo )
+
       IF (allocated(rx0))               deallocate ( rx0 )
 
       IF (allocated(rx1))               deallocate ( rx1 )
@@ -4116,7 +4199,15 @@
 
       IF (allocated(balance))           deallocate ( balance )
 
+      IF (allocated(Dirac))             deallocate ( Dirac )
+
+# ifdef MULTI_SCALE_B
+      IF (allocated(HdecayX))           deallocate ( HdecayX )
+
+      IF (allocated(HdecayY))           deallocate ( HdecayY )
+# else
       IF (allocated(Hdecay))            deallocate ( Hdecay )
+# endif
 
       IF (allocated(Vdecay))            deallocate ( Vdecay )
 
@@ -4131,6 +4222,18 @@
       IF (allocated(Nprovenance))       deallocate ( Nprovenance )
 
       IF (allocated(S_bgqc))            deallocate ( S_bgqc )
+
+# ifdef MULTI_SCALE_B
+      IF (allocated(Nscale))            deallocate ( Nscale )
+
+      IF (allocated(Nlap))              deallocate ( Nlap )
+
+      IF (allocated(Bwgt))              deallocate ( Bwgt )
+
+      IF (allocated(NiterCG))           deallocate ( NiterCG )
+
+      IF (allocated(NiterCI))           deallocate ( NiterCI )
+# endif
 
 # ifdef STD_MODEL
       IF (allocated(Sigma_max))         deallocate ( Sigma_max )
@@ -4518,6 +4621,7 @@
         ViscMin(ng)= Large
         ViscMax(ng)=-Large
 #endif
+        bot_albedo(ng)=0.0_r8
         rx0(ng)=-Large
         rx1(ng)=-Large
         CLM_FILE(ng)=.FALSE.
@@ -4621,12 +4725,17 @@
       balance=.FALSE.
 
       Cnorm=.FALSE.
+      Dirac=0
+# ifndef MULTI_SCALE_B
       Hdecay=IniVal
+# endif
       Tdecay=IniVal
       Vdecay=IniVal
 
       CnormB=.FALSE.
+# ifndef MULTI_SCALE_B
       HdecayB=IniVal
+# endif
       VdecayB=IniVal
 
 # ifdef STD_MODEL

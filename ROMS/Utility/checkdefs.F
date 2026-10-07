@@ -726,6 +726,13 @@
       is=LEN_TRIM(Coptions)+1
       Coptions(is:is+11)=' BODYFORCE,'
 #endif
+#ifdef BOTTOM_ALBEDO
+!
+      IF (Master) WRITE (stdout,20) 'BOTTOM_ALBEDO',                    &
+     &   'Reflection of downward solar radiation due to bottom albedo'
+      is=LEN_TRIM(Coptions)+1
+      Coptions(is:is+15)=' BOTTOM_ALBEDO,'
+#endif
 #ifdef DISTRIBUTE
 # if defined BOUNDARY_ALLGATHER
 !
@@ -1055,6 +1062,13 @@
      &   'Modulate shortwave radiation by the local diurnal cycle'
       is=LEN_TRIM(Coptions)+1
       Coptions(is:is+16)=' DIURNAL_SRFLUX,'
+#endif
+#if defined DIRAC && defined CORRELATION
+!
+      IF (Master) WRITE (stdout,20) 'DIRAC',                            &
+     &   'Background-error covariance spreading with Dirac functions'
+      is=LEN_TRIM(Coptions)+1
+      Coptions(is:is+7)=' DIRAC,'
 #endif
 #ifdef DJ_GRADPS
 !
@@ -1814,6 +1828,20 @@
       is=LEN_TRIM(Coptions)+1
       Coptions(is:is+4)=' MPI,'
 #endif
+#if defined MULTI_SCALE_B && defined FOUR_DVAR
+!
+      IF (Master) WRITE (stdout,20) 'MULTI_SCALE_B',                    &
+     &   'Multi-scale background error covariance matrix'
+      is=LEN_TRIM(Coptions)+1
+      Coptions(is:is+15)=' MULTI_SCALE_B,'
+#endif
+#if defined MULTI_SCALE_DEBUG && defined FOUR_DVAR
+!
+      IF (Master) WRITE (stdout,20) 'MULTI_SCALE_DEBUG',                    &
+     &   'Multi-scale implicit solvers convergence reporting'
+      is=LEN_TRIM(Coptions)+1
+      Coptions(is:is+19)=' MULTI_SCALE_DEBUG,'
+#endif
 #if defined DISTRIBUTE
 # if defined MULTI_THREAD
 !
@@ -1887,13 +1915,6 @@
       is=LEN_TRIM(Coptions)+1
       Coptions(is:is+10)=' NONLINEAR,'
 #endif
-#if defined NO_SCORRECTION_ICE && defined ICE_MODEL && defined SOLVE3D
-!
-      IF (Master) WRITE (stdout,20) 'NO_SCORRECTION_ICE',               &
-     &   'No salinity correction under the ice'
-      is=LEN_TRIM(Coptions)+1
-      Coptions(is:is+20)=' NO_SCORRECTION_ICE,'
-#endif
 #ifdef SOLVE3D
 # if defined NONLIN_EOS
 !
@@ -1908,6 +1929,20 @@
       is=LEN_TRIM(Coptions)+1
       Coptions(is:is+13)=' !NONLIN_EOS,'
 # endif
+#endif
+#if defined NONUNIFORM_SCALES && defined MULTI_SCALE_B
+!
+      IF (Master) WRITE (stdout,20) 'NONUNIFORM_SCALES',                &
+     &   'Spatially-varying decorrelation length scales'
+      is=LEN_TRIM(Coptions)+1
+      Coptions(is:is+19)=' NONUNIFORM_SCALES,'
+#endif
+#if defined NO_SCORRECTION_ICE && defined ICE_MODEL && defined SOLVE3D
+!
+      IF (Master) WRITE (stdout,20) 'NO_SCORRECTION_ICE',               &
+     &   'No salinity correction under the ice'
+      is=LEN_TRIM(Coptions)+1
+      Coptions(is:is+20)=' NO_SCORRECTION_ICE,'
 #endif
 #if defined NO_CORRECT_TRACER && defined NESTING && defined SOLVE3D
 !
